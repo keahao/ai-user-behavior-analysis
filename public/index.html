@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 用户分析</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --primary: #6366f1; --secondary: #8b5cf6; --bg: #0f172a; --card: rgba(30,41,59,0.8); --text: #f1f5f9; --muted: #94a3b8; --border: rgba(148,163,184,0.1); }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); min-height: 100vh; color: var(--text); }
+    .bg { position: fixed; inset: 0; background: radial-gradient(ellipse at top left, rgba(99,102,241,0.15), transparent 50%), radial-gradient(ellipse at bottom right, rgba(139,92,246,0.15), transparent 50%); z-index: -1; }
+    .container { max-width: 900px; margin: 0 auto; padding: 60px 20px; }
+    .header { text-align: center; margin-bottom: 40px; }
+    .logo { width: 72px; height: 72px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 36px; margin-bottom: 20px; box-shadow: 0 12px 40px rgba(99,102,241,0.4); }
+    h1 { font-size: 40px; font-weight: 700; margin-bottom: 12px; background: linear-gradient(135deg, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .subtitle { color: var(--muted); font-size: 16px; }
+    .settings-link { position: fixed; top: 20px; right: 20px; padding: 12px 20px; background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.3); border-radius: 12px; color: var(--primary); text-decoration: none; font-size: 14px; transition: all 0.2s; }
+    .settings-link:hover { background: rgba(99,102,241,0.2); }
+    .card { background: var(--card); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 24px; padding: 32px; margin-bottom: 24px; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; font-size: 14px; color: var(--muted); margin-bottom: 10px; font-weight: 500; }
+    textarea { width: 100%; height: 160px; padding: 18px; background: rgba(15,23,42,0.6); border: 1px solid var(--border); border-radius: 16px; color: var(--text); font-size: 15px; font-family: inherit; resize: none; transition: all 0.2s; }
+    textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(99,102,241,0.1); }
+    textarea::placeholder { color: var(--muted); }
+    .btn { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 20px rgba(99,102,241,0.4); }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(99,102,241,0.5); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .output { padding: 28px; background: rgba(15,23,42,0.6); border: 1px solid var(--border); border-radius: 16px; margin-top: 24px; white-space: pre-wrap; line-height: 1.8; font-size: 14px; }
+    .alert { padding: 16px 20px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 12px; color: #fca5a5; margin-bottom: 24px; }
+    .alert a { color: #fca5a5; text-decoration: underline; }
+    @media (max-width: 600px) { h1 { font-size: 28px; } .container { padding: 40px 16px; } }
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+  <a href="/settings.html" class="settings-link">⚙️ API 设置</a>
+  <div class="container">
+    <div class="header">
+      <div class="logo">👥</div>
+      <h1>AI 用户分析</h1>
+      <p class="subtitle">行为模式 · 转化优化 · 用户画像</p>
+    </div>
+    <div id="alert" class="alert" style="display:none;">⚠️ 请先配置 API Key。<a href="/settings.html">前往设置</a></div>
+    <div class="card">
+      <div class="form-group">
+        <label>输入需求</label>
+        <textarea id="input" placeholder="详细描述您的需求..."></textarea>
+      </div>
+      <button class="btn" id="btn" onclick="generate()">✨ 生成内容</button>
+    </div>
+    <div class="output" id="output" style="display:none;"></div>
+  </div>
+  <script>
+    const PROMPT = '行为模式 · 转化优化 · 用户画像';
+    function getConfig() {
+      const c = localStorage.getItem('ai-tools-config');
+      return c ? JSON.parse(c) : null;
+    }
+    function checkKey() {
+      const c = getConfig();
+      document.getElementById('alert').style.display = (!c || !c.apiKey) ? 'block' : 'none';
+    }
+    async function generate() {
+      const config = getConfig();
+      if (!config || !config.apiKey) { alert('请先配置 API Key'); location.href = '/settings.html'; return; }
+      const input = document.getElementById('input').value;
+      if (!input.trim()) return;
+      const btn = document.getElementById('btn');
+      const output = document.getElementById('output');
+      btn.disabled = true;
+      btn.textContent = '生成中...';
+      output.style.display = 'block';
+      output.textContent = '✨ 正在生成...';
+      try {
+        const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + config.apiKey, 'Content-Type': 'application/json', 'HTTP-Referer': window.location.origin },
+          body: JSON.stringify({ model: config.model || 'deepseek/deepseek-chat', messages: [{ role: 'system', content: '你是专业的' + PROMPT + '专家。' }, { role: 'user', content: input }] })
+        });
+        const data = await res.json();
+        output.textContent = data.choices?.[0]?.message?.content || ('错误: ' + JSON.stringify(data.error || data));
+      } catch (e) { output.textContent = '❌ 网络错误: ' + e.message; }
+      btn.disabled = false;
+      btn.textContent = '✨ 生成内容';
+    }
+    checkKey();
+  </script>
+</body>
+</html>
