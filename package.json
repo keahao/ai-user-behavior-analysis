@@ -1,6 +1,10 @@
 {
-  "name": "ai-project-template",
+  "name": "ai-user-behavior-analysis",
   "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "next": "14.2.3",
     "react": "^18.3.1",
@@ -12,6 +16,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "lint": "next lint"
   }
 }
