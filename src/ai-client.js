@@ -17,7 +17,7 @@ class AIClient {
           'X-Title': 'AI Tools'
         }
       });
-      this.model = 'openai/gpt-4o-mini';
+      this.model = 'deepseek/deepseek-chat';
     }
   }
 
